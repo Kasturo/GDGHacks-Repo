@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException
 import jwt
 
-from db.sqlite import get_user_by_id
+from database import get_user_by_id
 
 load_dotenv()
 JWT_SECRET = os.getenv("JWT_SECRET", "dev-only-change-me")
