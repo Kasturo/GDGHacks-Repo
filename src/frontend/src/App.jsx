@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { apiBaseUrl } from '@/lib/apiBase.js';
 import { Button } from './components/ui/button';
 import { DmsPage } from './pages/DmsPage';
 import { LandingPage } from './pages/LandingPage';
@@ -12,7 +13,7 @@ function App() {
 
   const callApi = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/health`);
+      const response = await fetch(`${apiBaseUrl}/api/health`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
+import { apiBaseUrl } from '@/lib/apiBase.js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,7 +41,7 @@ export function SignInForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/login`, {
+      const response = await fetch(`${apiBaseUrl}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

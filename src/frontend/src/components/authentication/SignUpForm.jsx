@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { z } from 'zod';
+import { apiBaseUrl } from '@/lib/apiBase.js';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -51,7 +52,7 @@ export function SignUpForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/signup`, {
+      const response = await fetch(`${apiBaseUrl}/api/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
