@@ -9,6 +9,7 @@ from datetime import datetime
 
 class UserCreate(BaseModel):
     username: str
+    password: str
 
 
 class UserPublic(BaseModel):
