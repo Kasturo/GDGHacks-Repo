@@ -148,6 +148,159 @@ def get_user_by_id(user_id: int) -> Optional[sqlite3.Row]:
         ).fetchone()
 
 
+def get_pet_owned_by_user(pet_id: int, user_id: int) -> Optional[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, owner_id, name, species, breed, age_years, gender, bio, photo_url, created_at, updated_at
+            FROM pets
+            WHERE id = ? AND owner_id = ?
+            """,
+            (pet_id, user_id),
+        ).fetchone()
+
+
+def get_pet_by_id(pet_id: int) -> Optional[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, owner_id, name, species, breed, age_years, gender, bio, photo_url, created_at, updated_at
+            FROM pets
+            WHERE id = ?
+            """,
+            (pet_id,),
+        ).fetchone()
+
+
+def create_pet(
+    owner_id: int,
+    name: str,
+    species: str,
+    breed: Optional[str],
+    age_years: Optional[float],
+    gender: Optional[str],
+    bio: Optional[str],
+    photo_url: Optional[str],
+) -> sqlite3.Row:
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """
+            INSERT INTO pets (owner_id, name, species, breed, age_years, gender, bio, photo_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (owner_id, name, species, breed, age_years, gender, bio, photo_url),
+        )
+        pet_id = cursor.lastrowid
+        return conn.execute(
+            """
+            SELECT id, owner_id, name, species, breed, age_years, gender, bio, photo_url, created_at, updated_at
+            FROM pets
+            WHERE id = ?
+            """,
+            (pet_id,),
+        ).fetchone()
+
+
+def list_swipe_candidates(swiper_pet_id: int, user_id: int, limit: int = 25) -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT p.id, p.owner_id, p.name, p.species, p.breed, p.age_years, p.gender, p.bio, p.photo_url, p.created_at
+            FROM pets p
+            WHERE p.owner_id != ?
+              AND p.id != ?
+              AND NOT EXISTS (
+                SELECT 1
+                FROM swipes s
+                WHERE s.swiper_pet_id = ? AND s.swiped_pet_id = p.id
+              )
+            ORDER BY p.created_at DESC
+            LIMIT ?
+            """,
+            (user_id, swiper_pet_id, swiper_pet_id, limit),
+        ).fetchall()
+
+
+def record_swipe(swiper_pet_id: int, swiped_pet_id: int, direction: str) -> sqlite3.Row:
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO swipes (swiper_pet_id, swiped_pet_id, direction)
+            VALUES (?, ?, ?)
+            ON CONFLICT(swiper_pet_id, swiped_pet_id)
+            DO UPDATE SET direction = excluded.direction, created_at = datetime('now')
+            """,
+            (swiper_pet_id, swiped_pet_id, direction),
+        )
+        return conn.execute(
+            """
+            SELECT id, swiper_pet_id, swiped_pet_id, direction, created_at
+            FROM swipes
+            WHERE swiper_pet_id = ? AND swiped_pet_id = ?
+            """,
+            (swiper_pet_id, swiped_pet_id),
+        ).fetchone()
+
+
+def has_like_swipe(swiper_pet_id: int, swiped_pet_id: int) -> bool:
+    with get_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT 1
+            FROM swipes
+            WHERE swiper_pet_id = ? AND swiped_pet_id = ? AND direction = 'like'
+            """,
+            (swiper_pet_id, swiped_pet_id),
+        ).fetchone()
+        return row is not None
+
+
+def create_or_get_match(pet_one_id: int, pet_two_id: int) -> sqlite3.Row:
+    pet_a_id, pet_b_id = sorted((pet_one_id, pet_two_id))
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO matches (pet_a_id, pet_b_id)
+            VALUES (?, ?)
+            ON CONFLICT(pet_a_id, pet_b_id) DO NOTHING
+            """,
+            (pet_a_id, pet_b_id),
+        )
+        return conn.execute(
+            """
+            SELECT id, pet_a_id, pet_b_id, created_at
+            FROM matches
+            WHERE pet_a_id = ? AND pet_b_id = ?
+            """,
+            (pet_a_id, pet_b_id),
+        ).fetchone()
+
+
+def list_matches_for_pet(pet_id: int) -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT
+                m.id AS match_id,
+                m.created_at AS matched_at,
+                CASE WHEN m.pet_a_id = ? THEN m.pet_b_id ELSE m.pet_a_id END AS other_pet_id,
+                p.owner_id AS other_owner_id,
+                p.name AS other_name,
+                p.species AS other_species,
+                p.breed AS other_breed,
+                p.age_years AS other_age_years,
+                p.gender AS other_gender,
+                p.bio AS other_bio,
+                p.photo_url AS other_photo_url
+            FROM matches m
+            JOIN pets p
+              ON p.id = CASE WHEN m.pet_a_id = ? THEN m.pet_b_id ELSE m.pet_a_id END
+            WHERE m.pet_a_id = ? OR m.pet_b_id = ?
+            ORDER BY m.created_at DESC
+            """,
+            (pet_id, pet_id, pet_id, pet_id),
+        ).fetchall()
+
 if __name__ == "__main__":
     init_db()
     print("Database initialized at", DB_PATH)
