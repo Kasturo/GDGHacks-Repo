@@ -1,11 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
+from pydantic import BaseModel
 
-# ----------------------------------------------------------------
-# USERS
-# ----------------------------------------------------------------
 
 class UserCreate(BaseModel):
     username: str
@@ -20,10 +17,6 @@ class UserPublic(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ----------------------------------------------------------------
-# PETS
-# ----------------------------------------------------------------
 
 class PetCreate(BaseModel):
     owner_id: int
@@ -53,10 +46,6 @@ class PetPublic(BaseModel):
         from_attributes = True
 
 
-# ----------------------------------------------------------------
-# SWIPES
-# ----------------------------------------------------------------
-
 class SwipeCreate(BaseModel):
     swiper_pet_id: int
     swiped_pet_id: int
@@ -71,10 +60,6 @@ class SwipePublic(SwipeCreate):
         from_attributes = True
 
 
-# ----------------------------------------------------------------
-# MATCHES
-# ----------------------------------------------------------------
-
 class MatchPublic(BaseModel):
     id: int
     pet_a_id: int
@@ -84,10 +69,6 @@ class MatchPublic(BaseModel):
     class Config:
         from_attributes = True
 
-
-# ----------------------------------------------------------------
-# DIRECT MESSAGING
-# ----------------------------------------------------------------
 
 class ConversationPublic(BaseModel):
     id: int
