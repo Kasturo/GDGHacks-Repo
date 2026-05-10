@@ -103,6 +103,50 @@ def init_db() -> None:
         """)
 
 
+def create_user(username: str, password_hash: str) -> sqlite3.Row:
+    with get_connection() as conn:
+        cursor = conn.execute(
+            """
+            INSERT INTO users (username, password)
+            VALUES (?, ?)
+            """,
+            (username, password_hash),
+        )
+        user_id = cursor.lastrowid
+        return conn.execute(
+            """
+            SELECT id, username, created_at
+            FROM users
+            WHERE id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+
+
+def get_user_by_username(username: str) -> sqlite3.Row | None:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, username, password, created_at
+            FROM users
+            WHERE username = ?
+            """,
+            (username,),
+        ).fetchone()
+
+
+def get_user_by_id(user_id: int) -> sqlite3.Row | None:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, username, created_at
+            FROM users
+            WHERE id = ?
+            """,
+            (user_id,),
+        ).fetchone()
+
+
 if __name__ == "__main__":
     init_db()
     print("Database initialized at", DB_PATH)
