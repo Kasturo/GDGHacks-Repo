@@ -2,7 +2,7 @@ import hashlib
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, TypedDict
+from typing import Annotated, Optional, Tuple, TypedDict
 
 from dotenv import load_dotenv
 from fastapi import Depends, Header, HTTPException
@@ -18,7 +18,7 @@ JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
 class CurrentUserData(TypedDict):
     id: int
-    username: str
+    email: str
     created_at: str
 
 
@@ -37,19 +37,19 @@ def verify_password(password: str, stored_hash: str) -> bool:
     return secrets.compare_digest(candidate, hash_value)
 
 
-def create_access_token(user_id: int, username: str) -> tuple[str, int]:
+def create_access_token(user_id: int, email: str) -> Tuple[str, int]:
     expires_in = JWT_EXPIRE_MINUTES * 60
     expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
     payload = {
         "sub": str(user_id),
-        "username": username,
+        "email": email,
         "exp": expires_at,
     }
     token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
     return token, expires_in
 
 
-def get_current_user(authorization: str | None = Header(default=None)) -> CurrentUserData:
+def get_current_user(authorization: Optional[str] = Header(default=None)) -> CurrentUserData:
     if not authorization:
         raise HTTPException(status_code=401, detail="Missing authorization header")
 
@@ -77,7 +77,7 @@ def get_current_user(authorization: str | None = Header(default=None)) -> Curren
     if not user:
         raise HTTPException(status_code=401, detail="User no longer exists")
 
-    return {"id": user["id"], "username": user["username"], "created_at": user["created_at"]}
+    return {"id": user["id"], "email": user["username"], "created_at": user["created_at"]}
 
 
 CurrentUser = Annotated[CurrentUserData, Depends(get_current_user)]
