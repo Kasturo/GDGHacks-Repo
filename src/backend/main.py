@@ -1,4 +1,6 @@
 import os
+import sys
+from pathlib import Path
 from contextlib import asynccontextmanager
 import sqlite3
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
@@ -6,8 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 
+SRC_ROOT = Path(__file__).resolve().parent.parent
+if str(SRC_ROOT) not in sys.path:
+    sys.path.append(str(SRC_ROOT))
+
 from auth import CurrentUser, create_access_token, get_current_user, hash_password, verify_password
-from database import init_db, create_user, get_user_by_username
+from db.sqlite import create_user, get_user_by_username, init_db
 
 load_dotenv()
 
