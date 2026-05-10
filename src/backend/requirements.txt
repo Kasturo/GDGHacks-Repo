@@ -8,3 +8,4 @@ gunicorn
 # Environment & Utilities
 python-dotenv
 pydantic-settings
+PyJWT
