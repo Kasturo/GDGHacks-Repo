@@ -1,0 +1,10 @@
+# Web Framework
+fastapi[standard]
+
+# Production Server (EC2)
+uvicorn[standard]
+gunicorn
+
+# Environment & Utilities
+python-dotenv
+pydantic-settings
