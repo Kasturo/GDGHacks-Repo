@@ -4,6 +4,9 @@ __pycache__/
 *.pyo
 .env
 
+# macOS
+.DS_Store
+
 # SQLite database (local only)
 *.db
 

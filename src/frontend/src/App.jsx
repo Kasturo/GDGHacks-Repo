@@ -1,5 +1,11 @@
 import { useState } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Button } from './components/ui/button';
+import { DmsPage } from './pages/DmsPage';
+import { LandingPage } from './pages/LandingPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { SignInPage } from './pages/SignInPage';
+import { SignUpPage } from './pages/SignUpPage';
 
 function App() {
   const [result, setResult] = useState('');
@@ -20,11 +26,17 @@ function App() {
   };
 
   return (
-    <main className="mx-auto grid min-h-svh w-full place-items-center gap-4 p-8 text-center">
-      <h1 className="m-0 text-5xl font-medium tracking-tight text-foreground md:text-6xl">EC2-Ready App</h1>
-      <Button onClick={callApi}>Test API</Button>
-      {result && <p className="max-w-2xl text-sm text-muted-foreground">{result}</p>}
-    </main>
+    <Routes>
+      <Route path="/" element={<Navigate to="/landing" replace />} />
+      <Route
+        path="/landing"
+        element={<LandingPage onHealthCheck={callApi} healthMessage={result} ActionButton={Button} />}
+      />
+      <Route path="/signin" element={<SignInPage/>} />
+      <Route path="/signup" element={<SignUpPage/>} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/dms" element={<DmsPage />} />
+    </Routes>
   );
 }
 export default App;

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 import sqlite3
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from dotenv import load_dotenv
 
 SRC_ROOT = Path(__file__).resolve().parent.parent
@@ -13,7 +13,7 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
 from auth import CurrentUser, create_access_token, get_current_user, hash_password, verify_password
-from db.sqlite import create_user, get_user_by_username, init_db
+from database import init_db, create_user, get_user_by_email
 
 load_dotenv()
 
@@ -49,24 +49,24 @@ def health_check():
 
 
 class SignupRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=30)
+    email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
 
 class SignupResponse(BaseModel):
     id: int
-    username: str
+    email: EmailStr
     created_at: str
 
 
 class LoginRequest(BaseModel):
-    username: str = Field(min_length=3, max_length=30)
+    email: EmailStr
     password: str = Field(min_length=8, max_length=128)
 
 
 class LoginResponse(BaseModel):
     id: int
-    username: str
+    email: EmailStr
     created_at: str
     access_token: str
     token_type: str
@@ -75,7 +75,7 @@ class LoginResponse(BaseModel):
 
 class MeResponse(BaseModel):
     id: int
-    username: str
+    email: EmailStr
     created_at: str
 
 
@@ -84,41 +84,41 @@ protected_router = APIRouter(prefix="/api", dependencies=[Depends(get_current_us
 
 @app.post("/api/signup", response_model=SignupResponse, status_code=201)
 def signup(payload: SignupRequest):
-    username = payload.username.strip()
-    if not username:
-        raise HTTPException(status_code=422, detail="Username cannot be blank")
+    email = payload.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=422, detail="Email cannot be blank")
 
     password_hash = hash_password(payload.password)
     try:
-        user = create_user(username, password_hash)
+        user = create_user(email, password_hash)
     except sqlite3.IntegrityError:
-        raise HTTPException(status_code=409, detail="Username already exists")
+        raise HTTPException(status_code=409, detail="Email already exists")
 
     return {
         "id": user["id"],
-        "username": user["username"],
+        "email": user["username"],
         "created_at": user["created_at"],
     }
 
 
 @app.post("/api/login", response_model=LoginResponse)
 def login(payload: LoginRequest):
-    username = payload.username.strip()
-    if not username:
-        raise HTTPException(status_code=422, detail="Username cannot be blank")
+    email = payload.email.strip().lower()
+    if not email:
+        raise HTTPException(status_code=422, detail="Email cannot be blank")
 
-    user = get_user_by_username(username)
+    user = get_user_by_email(email)
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if not verify_password(payload.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid username or password")
+        raise HTTPException(status_code=401, detail="Invalid email or password")
 
     access_token, expires_in = create_access_token(user["id"], user["username"])
 
     return {
         "id": user["id"],
-        "username": user["username"],
+        "email": user["username"],
         "created_at": user["created_at"],
         "access_token": access_token,
         "token_type": "bearer",

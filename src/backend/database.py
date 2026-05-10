@@ -26,7 +26,7 @@ def init_db() -> None:
             );
 
             -- ----------------------------------------------------------------
-            -- PETS  (the profiles being swiped on)
+            -- PETS
             -- ----------------------------------------------------------------
             CREATE TABLE IF NOT EXISTS pets (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -43,7 +43,7 @@ def init_db() -> None:
             );
 
             -- ----------------------------------------------------------------
-            -- SWIPES  (like | pass)
+            -- SWIPES
             -- ----------------------------------------------------------------
             CREATE TABLE IF NOT EXISTS swipes (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +55,7 @@ def init_db() -> None:
             );
 
             -- ----------------------------------------------------------------
-            -- MATCHES  (mutual likes)
+            -- MATCHES
             -- ----------------------------------------------------------------
             CREATE TABLE IF NOT EXISTS matches (
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
