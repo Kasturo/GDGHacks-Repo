@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import { Button } from './components/ui/button';
+import { CreatePetPage } from './pages/CreatePetPage';
 import { DmsPage } from './pages/DmsPage';
 import { LandingPage } from './pages/LandingPage';
+import { MainPage } from './pages/MainPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
@@ -27,13 +29,14 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/landing" replace />} />
+      <Route path="/" element={<MainPage />} />
       <Route
         path="/landing"
         element={<LandingPage onHealthCheck={callApi} healthMessage={result} ActionButton={Button} />}
       />
       <Route path="/signin" element={<SignInPage/>} />
       <Route path="/signup" element={<SignUpPage/>} />
+      <Route path="/pets/create" element={<CreatePetPage/>} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/dms" element={<DmsPage />} />
     </Routes>

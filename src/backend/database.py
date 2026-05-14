@@ -201,6 +201,19 @@ def create_pet(
         ).fetchone()
 
 
+def list_pets_owned_by_user(user_id: int) -> list[sqlite3.Row]:
+    with get_connection() as conn:
+        return conn.execute(
+            """
+            SELECT id, owner_id, name, species, breed, age_years, gender, bio, photo_url, created_at, updated_at
+            FROM pets
+            WHERE owner_id = ?
+            ORDER BY created_at DESC
+            """,
+            (user_id,),
+        ).fetchall()
+
+
 def list_swipe_candidates(swiper_pet_id: int, user_id: int, limit: int = 25) -> list[sqlite3.Row]:
     with get_connection() as conn:
         return conn.execute(

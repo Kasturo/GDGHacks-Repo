@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from contextlib import asynccontextmanager
 import sqlite3
+from typing import Optional
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
@@ -22,6 +23,7 @@ from database import (
     get_user_by_email,
     has_like_swipe,
     init_db,
+    list_pets_owned_by_user,
     list_matches_for_pet,
     list_swipe_candidates,
     record_swipe,
@@ -41,8 +43,8 @@ app = FastAPI(lifespan=lifespan)
 raw_origins = os.getenv("ORIGIN", "")
 env_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 default_origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5173", # replace
+    "http://127.0.0.1:5173", # replace
 ]
 allow_origins = env_origins or default_origins
 
@@ -96,11 +98,11 @@ class PetCardResponse(BaseModel):
     owner_id: int
     name: str
     species: str
-    breed: str | None = None
-    age_years: float | None = None
-    gender: str | None = None
-    bio: str | None = None
-    photo_url: str | None = None
+    breed: Optional[str] = None
+    age_years: Optional[float] = None
+    gender: Optional[str] = None
+    bio: Optional[str] = None
+    photo_url: Optional[str] = None
     created_at: str
 
 
@@ -114,17 +116,17 @@ class SwipeResponse(BaseModel):
     swipe_id: int
     direction: str
     is_match: bool
-    match_id: int | None = None
+    match_id: Optional[int] = None
 
 
 class CreatePetRequest(BaseModel):
     name: str = Field(min_length=1, max_length=80)
     species: str = Field(min_length=1, max_length=50)
-    breed: str | None = Field(default=None, max_length=80)
-    age_years: float | None = Field(default=None, ge=0)
-    gender: str | None = Field(default=None, max_length=20)
-    bio: str | None = Field(default=None, max_length=1000)
-    photo_url: str | None = Field(default=None, max_length=500)
+    breed: Optional[str] = Field(default=None, max_length=80)
+    age_years: Optional[float] = Field(default=None, ge=0)
+    gender: Optional[str] = Field(default=None, max_length=20)
+    bio: Optional[str] = Field(default=None, max_length=1000)
+    photo_url: Optional[str] = Field(default=None, max_length=500)
 
 
 class MatchItemResponse(BaseModel):
@@ -134,11 +136,11 @@ class MatchItemResponse(BaseModel):
     other_owner_id: int
     other_name: str
     other_species: str
-    other_breed: str | None = None
-    other_age_years: float | None = None
-    other_gender: str | None = None
-    other_bio: str | None = None
-    other_photo_url: str | None = None
+    other_breed: Optional[str] = None
+    other_age_years: Optional[float] = None
+    other_gender: Optional[str] = None
+    other_bio: Optional[str] = None
+    other_photo_url: Optional[str] = None
 
 
 protected_router = APIRouter(prefix="/api", dependencies=[Depends(get_current_user)])
@@ -192,7 +194,7 @@ def login(payload: LoginRequest):
 def get_me(current_user: CurrentUser):
     return {
         "id": current_user["id"],
-        "email": current_user["username"],
+        "email": current_user["email"],
         "created_at": current_user["created_at"],
     }
 
@@ -231,6 +233,26 @@ def add_pet(payload: CreatePetRequest, current_user: CurrentUser):
         "photo_url": pet["photo_url"],
         "created_at": pet["created_at"],
     }
+
+
+@protected_router.get("/pets/mine", response_model=list[PetCardResponse])
+def get_my_pets(current_user: CurrentUser):
+    pets = list_pets_owned_by_user(current_user["id"])
+    return [
+        {
+            "id": pet["id"],
+            "owner_id": pet["owner_id"],
+            "name": pet["name"],
+            "species": pet["species"],
+            "breed": pet["breed"],
+            "age_years": pet["age_years"],
+            "gender": pet["gender"],
+            "bio": pet["bio"],
+            "photo_url": pet["photo_url"],
+            "created_at": pet["created_at"],
+        }
+        for pet in pets
+    ]
 
 
 @protected_router.get("/matches", response_model=list[MatchItemResponse])
