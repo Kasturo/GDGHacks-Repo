@@ -41,8 +41,8 @@ app = FastAPI(lifespan=lifespan)
 raw_origins = os.getenv("ORIGIN", "")
 env_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
 default_origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:5173", # replace
+    "http://127.0.0.1:5173", # replace
 ]
 allow_origins = env_origins or default_origins
 
